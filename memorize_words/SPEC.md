@@ -2,7 +2,21 @@
 
 ## Overview
 
-A flashcard application for memorizing vocabulary using the **SM-2 spaced repetition algorithm**. All data is persisted locally on the client with no backend required. The app is self-contained with no external dependencies.
+A flashcard application for memorizing vocabulary using the **SM-2 spaced repetition algorithm**. All data is persisted locally on the client with no backend required. The app is self-contained with no external dependencies. Multiple users are supported, each with their own isolated word list and progress.
+
+---
+
+## Multi-User Support
+
+The app supports multiple independent users on the same device.
+
+- On load, a **User Selection screen** is shown before the main app.
+- Users can be created (unique name required) or deleted (with confirmation; deletes all their data).
+- Selecting a user loads their personal word list and enters the main app.
+- A **Switch User** button in the nav bar returns to the User Selection screen.
+- Each user's data is stored under a separate `localStorage` key: `wm_words_<username>`.
+- The user list is stored under `wm_users` in `localStorage`.
+- **Legacy migration**: if a `wm_words` key exists from a single-user version, it is automatically migrated to a user named `default` on first load.
 
 ---
 
