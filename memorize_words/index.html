@@ -71,14 +71,14 @@
 <body>
   <h1>📚 Word Memorizer</h1>
   <nav>
-    <button class="active" onclick="showView('add')">Add Word</button>
+    <button class="active" onclick="showView('stats')">Stats</button>
     <button onclick="showView('review')">Review</button>
     <button onclick="showView('list')">My Words</button>
-    <button onclick="showView('stats')">Stats</button>
+    <button onclick="showView('add')">Add Word</button>
   </nav>
 
   <!-- Add Word -->
-  <div id="view-add" class="view active">
+  <div id="view-add" class="view">
     <div class="add-form">
       <input id="input-word" type="text" placeholder="Word" />
       <textarea id="input-def" placeholder="Definition / notes (optional)"></textarea>
@@ -118,7 +118,7 @@
   </div>
 
   <!-- Stats -->
-  <div id="view-stats" class="view">
+  <div id="view-stats" class="view active">
     <div id="stats-area">
       <div class="stat-row">
         <div class="stat-box"><h3>Total Words</h3><p id="stat-total">0</p></div>
@@ -149,6 +149,8 @@
     });
 
     function save() { localStorage.setItem('wm_words', JSON.stringify(words)); }
+
+    renderStats();
 
     function showView(name) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
