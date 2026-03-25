@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Word Memorizer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #f0f4f8; color: #333; display: flex; flex-direction: column; align-items: center; padding: 2rem; min-height: 100vh; }
+    h1 { margin-bottom: 1.5rem; font-size: 1.8rem; }
+
+    nav { display: flex; gap: 1rem; margin-bottom: 2rem; }
+    nav button { padding: 0.5rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; background: #cbd5e1; font-size: 1rem; }
+    nav button.active { background: #3b82f6; color: white; }
+
+    .view { display: none; width: 100%; max-width: 520px; }
+    .view.active { display: block; }
+
+    /* Add Word */
+    .add-form { display: flex; flex-direction: column; gap: 0.8rem; }
+    .add-form input, .add-form textarea { padding: 0.6rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; width: 100%; }
+    .add-form textarea { resize: vertical; min-height: 80px; }
+    .add-form button { padding: 0.6rem; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    .add-form button:hover { background: #2563eb; }
+    #add-msg { color: green; font-size: 0.9rem; min-height: 1.2rem; }
+    .file-upload { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 0.8rem; text-align: center; cursor: pointer; color: #64748b; font-size: 0.9rem; transition: border-color 0.2s; }
+    .file-upload:hover { border-color: #3b82f6; color: #3b82f6; }
+    .divider { text-align: center; color: #94a3b8; font-size: 0.85rem; position: relative; }
+    .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 44%; height: 1px; background: #e2e8f0; }
+    .divider::before { left: 0; } .divider::after { right: 0; }
+
+    /* Word List */
+    #word-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+    .word-item { background: white; border-radius: 8px; padding: 0.7rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .word-item span { font-weight: 600; }
+    .word-item small { color: #64748b; font-size: 0.8rem; }
+    .word-item button { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem; }
+
+    /* Flashcard */
+    #card-area { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    #progress-text { color: #64748b; font-size: 0.9rem; }
+    .card { width: 100%; min-height: 180px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2rem; text-align: center; user-select: none; transition: background 0.2s; }
+    .card:hover { background: #f8fafc; }
+    .card .word { font-size: 1.8rem; font-weight: 700; }
+    .card .definition { font-size: 1.1rem; color: #475569; }
+    .card .hint { font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; }
+    .card-actions { display: flex; gap: 1rem; width: 100%; justify-content: space-between; }
+    .card-actions button { padding: 0.7rem 1.5rem; border: none; border-radius: 8px; font-size: 1.4rem; cursor: pointer; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+    .card-actions button small { font-size: 0.7rem; font-weight: 400; }
+    #btn-dontknow { background: #fee2e2; color: #ef4444; }
+    #btn-dontknow:hover { background: #fecaca; }
+    #btn-know { background: #dcfce7; color: #16a34a; }
+    #btn-know:hover { background: #bbf7d0; }
+    #card-actions-row { display: flex; gap: 0.8rem; width: 100%; justify-content: center; }
+    #card-actions-row button { padding: 0.4rem 1rem; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+    #no-cards-msg { color: #64748b; text-align: center; margin-top: 2rem; }
+
+    /* Stats */
+    #stats-area { display: flex; flex-direction: column; gap: 1rem; }
+    .stat-box { background: white; border-radius: 10px; padding: 1rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .stat-box h3 { font-size: 1rem; color: #64748b; margin-bottom: 0.3rem; }
+    .stat-box p { font-size: 2rem; font-weight: 700; }
+    .stat-row { display: flex; gap: 1rem; }
+    .stat-row .stat-box { flex: 1; }
+    .progress-bar-wrap { background: #e2e8f0; border-radius: 99px; height: 12px; overflow: hidden; margin-top: 0.5rem; }
+    .progress-bar { height: 100%; background: #3b82f6; border-radius: 99px; transition: width 0.4s; }
+    #reset-btn { margin-top: 1rem; padding: 0.5rem 1rem; background: #fee2e2; color: #ef4444; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+    #reset-btn:hover { background: #fecaca; }
+  </style>
+</head>
+<body>
+  <h1>📚 Word Memorizer</h1>
+  <nav>
+    <button class="active" onclick="showView('add')">Add Word</button>
+    <button onclick="showView('review')">Review</button>
+    <button onclick="showView('list')">My Words</button>
+    <button onclick="showView('stats')">Stats</button>
+  </nav>
+
+  <!-- Add Word -->
+  <div id="view-add" class="view active">
+    <div class="add-form">
+      <input id="input-word" type="text" placeholder="Word" />
+      <textarea id="input-def" placeholder="Definition / notes (optional)"></textarea>
+      <button onclick="addWord()">Add Word</button>
+      <div id="add-msg"></div>
+      <div class="divider">or import from file</div>
+      <label class="file-upload">
+        📂 Choose a .txt file
+        <input type="file" accept=".txt" style="display:none" onchange="importFile(event)" />
+      </label>
+      <div id="import-msg" style="font-size:0.9rem;min-height:1.2rem"></div>
+    </div>
+  </div>
+
+  <!-- Review -->
+  <div id="view-review" class="view">
+    <div id="card-area">
+      <div id="progress-text"></div>
+      <div class="card" id="flashcard" onclick="flipCard()">
+        <div id="card-content"></div>
+      </div>
+      <div class="card-actions" id="card-actions">
+        <button id="btn-dontknow" onclick="markCard(false)">← <small>Don't Know</small></button>
+        <button id="btn-know" onclick="markCard(true)">→ <small>Know</small></button>
+      </div>
+      <div id="card-actions-row">
+        <button onclick="startSession()">🔄 Restart</button>
+        <button onclick="startSession(true)">📋 Review All</button>
+      </div>
+      <div id="no-cards-msg" style="display:none">No words yet. Add some words first!</div>
+    </div>
+  </div>
+
+  <!-- Word List -->
+  <div id="view-list" class="view">
+    <div id="word-list"></div>
+  </div>
+
+  <!-- Stats -->
+  <div id="view-stats" class="view">
+    <div id="stats-area">
+      <div class="stat-row">
+        <div class="stat-box"><h3>Total Words</h3><p id="stat-total">0</p></div>
+        <div class="stat-box"><h3>Due Today</h3><p id="stat-known" style="color:#f59e0b">0</p></div>
+        <div class="stat-box"><h3>Mature</h3><p id="stat-learning" style="color:#22c55e">0</p></div>
+      </div>
+      <div class="stat-box">
+        <h3>Mastery (interval ≥ 21 days)</h3>
+        <p id="stat-pct">0%</p>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="stat-bar" style="width:0%"></div></div>
+      </div>
+      <div class="stat-box"><h3>Next Review Date</h3><p id="stat-next" style="font-size:1.2rem">—</p></div>
+      <button id="reset-btn" onclick="resetProgress()">Reset All Progress</button>
+      <button id="reset-btn" style="background:#fef9c3;color:#b45309" onclick="deleteAllWords()">Delete All Words</button>
+    </div>
+  </div>
+
+  <script>
+    let words = JSON.parse(localStorage.getItem('wm_words') || '[]');
+    let session = [], sessionIdx = 0, flipped = false;
+
+    const today = () => new Date().setHours(0,0,0,0);
+    const daysFromNow = d => today() + d * 86400000;
+
+    // Migrate old words that lack SM-2 fields
+    words.forEach(w => {
+      if (!w.easeFactor) { w.easeFactor = 2.5; w.interval = 0; w.nextReview = daysFromNow(0); }
+    });
+
+    function save() { localStorage.setItem('wm_words', JSON.stringify(words)); }
+
+    function showView(name) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.getElementById('view-' + name).classList.add('active');
+      event.target.classList.add('active');
+      if (name === 'review') startSession();
+      if (name === 'list') renderList();
+      if (name === 'stats') renderStats();
+    }
+
+    function importFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const lines = ev.target.result.split('\n').map(l => l.trim()).filter(Boolean);
+        let added = 0, skipped = 0;
+        lines.forEach(line => {
+          const [word, ...rest] = line.split('|');
+          const w = word.trim().replace(/\s+\d+$/, '');
+          const def = rest.join('|').trim();
+          if (!w) return;
+          if (words.find(x => x.word.toLowerCase() === w.toLowerCase())) { skipped++; return; }
+          words.push({ word: w, def, known: false, interval: 0, easeFactor: 2.5, nextReview: daysFromNow(0) });
+          added++;
+        });
+        save();
+        const msg = document.getElementById('import-msg');
+        msg.style.color = added ? 'green' : 'orange';
+        msg.textContent = `Imported ${added} word(s)${skipped ? `, skipped ${skipped} duplicate(s)` : ''}.`;
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function addWord() {
+      const word = document.getElementById('input-word').value.trim();
+      const def = document.getElementById('input-def').value.trim();
+      const msg = document.getElementById('add-msg');
+      if (!word) { msg.textContent = 'Please enter a word.'; msg.style.color = 'red'; return; }
+      if (words.find(w => w.word.toLowerCase() === word.toLowerCase())) {
+        msg.textContent = 'Word already exists.'; msg.style.color = 'orange'; return;
+      }
+      words.push({ word, def, known: false, interval: 0, easeFactor: 2.5, nextReview: daysFromNow(0) });
+      save();
+      document.getElementById('input-word').value = '';
+      document.getElementById('input-def').value = '';
+      msg.style.color = 'green';
+      msg.textContent = `"${word}" added!`;
+      setTimeout(() => msg.textContent = '', 2000);
+    }
+
+    function renderList() {
+      const el = document.getElementById('word-list');
+      if (!words.length) { el.innerHTML = '<p style="color:#64748b;text-align:center">No words yet.</p>'; return; }
+      const sorted = [...words].map((w, i) => ({...w, origIdx: i})).sort((a, b) => a.nextReview - b.nextReview);
+      el.innerHTML = sorted.map(w => `
+        <div class="word-item">
+          <div>
+            <span>${w.word}</span>
+            <small style="display:block">${(w.def||'').length > 60 ? (w.def||'').slice(0,60)+'…' : (w.def||'')}</small>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <small style="color:#64748b">${w.interval >= 21 ? '🟢 mature' : w.nextReview <= today() ? '🔴 due' : '🟡 ' + new Date(w.nextReview).toLocaleDateString()}</small>
+            <button onclick="deleteWord(${w.origIdx})" title="Delete">🗑</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function deleteWord(i) {
+      if (!confirm(`Delete "${words[i].word}"?`)) return;
+      words.splice(i, 1);
+      save();
+      renderList();
+    }
+
+    function startSession(all = false) {
+      const due = words.filter(w => w.nextReview <= today());
+      const pool = all ? [...words] : due;
+      session = pool.sort(() => Math.random() - 0.5);
+      sessionIdx = 0;
+      document.getElementById('no-cards-msg').style.display = 'none';
+      showCard();
+    }
+
+    function showCard() {
+      const card = document.getElementById('flashcard');
+      const content = document.getElementById('card-content');
+      const actions = document.getElementById('card-actions');
+      const progress = document.getElementById('progress-text');
+
+      if (!words.length) {
+        document.getElementById('no-cards-msg').style.display = 'block';
+        content.innerHTML = '';
+        progress.textContent = '';
+        return;
+      }
+
+      if (!session.length || sessionIdx >= session.length) {
+        const next = words.filter(w => w.nextReview > today()).sort((a,b) => a.nextReview - b.nextReview);
+        const nextDate = next.length ? new Date(next[0].nextReview).toLocaleDateString() : '';
+        content.innerHTML = `<div class="word" style="font-size:1.2rem">${sessionIdx > 0 ? '✅ Session done!' : '🎉 All caught up!'}<br><small style="font-weight:400;color:#64748b">${nextDate ? 'Next review: ' + nextDate : ''}</small></div>`;
+        progress.textContent = '';
+        return;
+      }
+
+      flipped = false;
+      const w = session[sessionIdx];
+      progress.textContent = `${sessionIdx + 1} / ${session.length}`;
+      content.innerHTML = `<div><div class="word">${w.word}</div><div class="hint">tap to reveal</div></div>`;
+    }
+
+    function flipCard() {
+      if (sessionIdx >= session.length || !session.length) return;
+      if (flipped) return;
+      flipped = true;
+      const w = session[sessionIdx];
+      document.getElementById('card-content').innerHTML =
+        `<div><div class="word">${w.word}</div><div class="definition">${w.def}</div></div>`;
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!document.getElementById('view-review').classList.contains('active')) return;
+      if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); flipCard(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); markCard(false); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); markCard(true); }
+    });
+
+    function markCard(known) {
+      const w = session[sessionIdx];
+      const orig = words.find(x => x.word === w.word);
+      if (orig) {
+        if (known) {
+          orig.interval = orig.interval < 1 ? 1 : orig.interval < 2 ? 2 : Math.round(orig.interval * orig.easeFactor);
+          orig.easeFactor = Math.max(1.3, orig.easeFactor + 0.1);
+        } else {
+          orig.interval = 1;
+          orig.easeFactor = Math.max(1.3, orig.easeFactor - 0.2);
+        }
+        orig.nextReview = daysFromNow(orig.interval);
+        orig.known = orig.interval >= 21;
+        save();
+      }
+      sessionIdx++;
+      showCard();
+    }
+
+    function renderStats() {
+      const total = words.length;
+      const due = words.filter(w => w.nextReview <= today()).length;
+      const mature = words.filter(w => w.interval >= 21).length;
+      const pct = total ? Math.round(mature / total * 100) : 0;
+      const next = words.filter(w => w.nextReview > today()).sort((a,b) => a.nextReview - b.nextReview);
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-known').textContent = due;
+      document.getElementById('stat-learning').textContent = mature;
+      document.getElementById('stat-pct').textContent = pct + '%';
+      document.getElementById('stat-bar').style.width = pct + '%';
+      document.getElementById('stat-next').textContent = next.length ? new Date(next[0].nextReview).toLocaleDateString() : '—';
+    }
+
+    function deleteAllWords() {
+      if (!confirm('Delete all words? This cannot be undone.')) return;
+      words = [];
+      save();
+      renderStats();
+    }
+
+    function resetProgress() {
+      if (!confirm('Reset all progress? Words will be kept but SM-2 data will be cleared.')) return;
+      words.forEach(w => { w.known = false; w.interval = 0; w.easeFactor = 2.5; w.nextReview = daysFromNow(0); });
+      save();
+      renderStats();
+    }
+  </script>
+</body>
+</html>
