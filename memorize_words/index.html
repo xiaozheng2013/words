@@ -117,7 +117,7 @@
       <button onclick="addWord()">Add Word</button>
       <div id="add-msg"></div>
       <div class="divider">or bulk add with auto-fill</div>
-      <textarea id="bulk-input" placeholder="Enter words separated by spaces or new lines&#10;e.g. ephemeral ubiquitous serendipity" style="resize:vertical;min-height:80px;padding:0.6rem 0.8rem;border:1px solid #cbd5e1;border-radius:6px;font-size:1rem;width:100%"></textarea>
+      <textarea id="bulk-input" placeholder="Enter words separated by spaces, commas, or new lines&#10;e.g. ephemeral, ubiquitous, serendipity" style="resize:vertical;min-height:80px;padding:0.6rem 0.8rem;border:1px solid #cbd5e1;border-radius:6px;font-size:1rem;width:100%"></textarea>
       <button onclick="bulkAdd()">Fetch &amp; Add</button>
       <div id="bulk-progress" style="font-size:0.9rem;min-height:1.2rem;color:#64748b"></div>
       <div id="bulk-notfound" style="display:none"></div>
@@ -304,7 +304,7 @@
 
     async function bulkAdd() {
       const raw = document.getElementById('bulk-input').value;
-      const words_input = [...new Set(raw.trim().split(/\s+/).filter(Boolean))];
+      const words_input = [...new Set(raw.trim().split(/[\s,]+/).filter(Boolean))];
       if (!words_input.length) return;
 
       const progress = document.getElementById('bulk-progress');

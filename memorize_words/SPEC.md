@@ -94,7 +94,7 @@ The app has four screens. Only one is visible at a time. The default screen on l
 - On success: save the new entry with default SM-2 values, clear the form, show a brief confirmation message.
 
 ### 2. Bulk Add with Auto-Fill
-- A textarea accepts words separated by any whitespace (spaces, newlines, or a mix).
+- A textarea accepts words separated by any whitespace (spaces, newlines, commas, or a mix).
 - Duplicate words (case-insensitive, already in the user's list) are skipped silently.
 - For each unique word, the app calls the [Free Dictionary API](https://api.dictionaryapi.dev/api/v2/entries/en/<word>) to fetch the first definition and first example sentence.
 - The `def` field is stored as `<definition> | Example: <example>` (example omitted if absent).

@@ -108,6 +108,18 @@
             document.getElementById('input-word').value === 'unknownword');
           reportAssert('Add Manually: entry removed from warning block',
             !document.getElementById('bulk-notfound').textContent.includes('unknownword'));
+
+          // ── Test 8: comma-separated input parsed correctly ──
+          localStorage.setItem('wm_words_Tester', JSON.stringify([]));
+          selectUser('Tester');
+          mockFetch({
+            apple: { def: 'a fruit', example: '' },
+            banana: { def: 'a yellow fruit', example: '' },
+          });
+          document.getElementById('bulk-input').value = 'apple,banana';
+          await bulkAdd();
+          reportAssert('Comma-separated: both words added',
+            words.find(w => w.word === 'apple') && words.find(w => w.word === 'banana'));
         })();
       `;
       doc.body.appendChild(script);
