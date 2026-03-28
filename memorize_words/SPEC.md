@@ -121,6 +121,7 @@ The app has four screens. Only one is visible at a time. The default screen on l
 - Two options: "Know" or "Don't Know".
 - Apply the SM-2 algorithm to the word's persistent record (matched by word string).
 - Persist the updated record, then advance to the next card.
+- Every 10 correct ("Know") answers within a session, a rain animation triggers: 15 items fall down the screen from random positions. Each item is randomly either a car brand logo (Tesla, BMW, Mercedes-Benz, Audi, Porsche, Ferrari, Lamborghini, Toyota, Honda, Ford) or a silly face emoji (🤪😜🤴😝🤡👻🙃😵🤣😂🥳😎🤓👽🫠). Items vary in size, fall speed, and start delay, then auto-remove after their animation completes. The counter resets when a new session starts.
 
 ### 4. Word List
 - Sorted by `nextReview` ascending (most overdue first).

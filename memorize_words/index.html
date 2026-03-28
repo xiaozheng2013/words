@@ -66,6 +66,21 @@
     .progress-bar { height: 100%; background: #3b82f6; border-radius: 99px; transition: width 0.4s; }
     #reset-btn { margin-top: 1rem; padding: 0.5rem 1rem; background: #fee2e2; color: #ef4444; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
     #reset-btn:hover { background: #fecaca; }
+
+    /* Good Job Word Rain */
+    .rain-word {
+      position: fixed;
+      top: -60px;
+      z-index: 1000;
+      font-weight: bold;
+      pointer-events: none;
+      animation: rainFall linear forwards;
+    }
+    @keyframes rainFall {
+      0% { top: -60px; opacity: 1; }
+      85% { opacity: 1; }
+      100% { top: 105vh; opacity: 0; }
+    }
   </style>
 </head>
 <body>
@@ -159,6 +174,7 @@
     let currentUser = null;
     let words = [];
     let session = [], sessionIdx = 0, flipped = false;
+    let correctAnswersInSession = 0;
 
     const today = () => new Date().setHours(0,0,0,0);
     const daysFromNow = d => today() + d * 86400000;
@@ -323,6 +339,7 @@
       const pool = all ? [...words] : due;
       session = pool.sort(() => Math.random() - 0.5);
       sessionIdx = 0;
+      correctAnswersInSession = 0; // Reset counter
       document.getElementById('no-cards-msg').style.display = 'none';
       showCard();
     }
@@ -370,13 +387,60 @@
       if (e.key === 'ArrowRight') { e.preventDefault(); markCard(true); }
     });
 
+    function showGoodJob() {
+      const cars = [
+        'https://www.carlogos.org/car-logos/tesla-logo.png',
+        'https://www.carlogos.org/car-logos/bmw-logo.png',
+        'https://www.carlogos.org/car-logos/mercedes-benz-logo.png',
+        'https://www.carlogos.org/car-logos/audi-logo.png',
+        'https://www.carlogos.org/car-logos/porsche-logo.png',
+        'https://www.carlogos.org/car-logos/ferrari-logo.png',
+        'https://www.carlogos.org/car-logos/lamborghini-logo.png',
+        'https://www.carlogos.org/car-logos/toyota-logo.png',
+        'https://www.carlogos.org/car-logos/honda-logo.png',
+        'https://www.carlogos.org/car-logos/ford-logo.png'
+      ];
+      const faces = ['🤪','😜','🥴','😝','🤡','👻','🙃','😵','🤣','😂','🥳','😎','🤓','👽','🫠'];
+      for (let i = 0; i < 15; i++) {
+        const useFace = Math.random() < 0.5;
+        const dur = 2 + Math.random() * 2;
+        const delay = Math.random() * 1.5;
+        let el;
+        if (useFace) {
+          el = document.createElement('div');
+          el.className = 'rain-word';
+          el.textContent = faces[Math.floor(Math.random() * faces.length)];
+          el.style.fontSize = (1.5 + Math.random() * 2) + 'rem';
+        } else {
+          el = document.createElement('img');
+          el.className = 'rain-word';
+          el.src = cars[Math.floor(Math.random() * cars.length)];
+          const size = 40 + Math.random() * 60;
+          el.style.width = size + 'px';
+          el.style.height = size + 'px';
+          el.style.objectFit = 'contain';
+        }
+        el.style.left = Math.random() * 90 + 5 + 'vw';
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = delay + 's';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), (dur + delay + 0.5) * 1000);
+      }
+    }
+
     function markCard(known) {
       const w = session[sessionIdx];
       const orig = words.find(x => x.word === w.word);
       if (orig) {
         if (known) {
+          correctAnswersInSession++;
           orig.interval = orig.interval < 1 ? 1 : orig.interval < 2 ? 2 : Math.round(orig.interval * orig.easeFactor);
           orig.easeFactor = Math.max(1.3, orig.easeFactor + 0.1);
+          
+          // Show good job message every 10 correct answers
+          if (correctAnswersInSession > 0 && correctAnswersInSession % 10 === 0) {
+            showGoodJob();
+          }
         } else {
           orig.interval = 1;
           orig.easeFactor = Math.max(1.3, orig.easeFactor - 0.2);
