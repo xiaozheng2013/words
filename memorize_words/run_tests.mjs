@@ -23,21 +23,32 @@ await new Promise(r => server.listen(0, 'localhost', r));
 const { port } = server.address();
 
 const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-const page = await browser.newPage();
 
-const results = await new Promise(async (resolve) => {
-  await page.exposeFunction('reportResults', resolve);
-  await page.goto(`http://localhost:${port}/test_switch_user.html`);
-  // Poll for results to appear then collect them
-  await page.waitForFunction(() => document.querySelectorAll('#results li').length > 0, { timeout: 10000 });
-  const items = await page.$$eval('#results li', els => els.map(el => ({ text: el.textContent, pass: el.classList.contains('pass') })));
-  resolve(items);
-});
+async function runTestPage(url, expectedCount) {
+  const p = await browser.newPage();
+  await p.goto(url);
+  await p.waitForFunction(
+    (n) => document.querySelectorAll('#results li').length >= n,
+    { timeout: 10000 }, expectedCount
+  );
+  const items = await p.$$eval('#results li', els => els.map(el => ({ text: el.textContent, pass: el.classList.contains('pass') })));
+  await p.close();
+  return items;
+}
+
+const suites = [
+  { file: 'test_switch_user.html', count: 5 },
+  { file: 'test_bulk_add.html',    count: 10 },
+];
 
 let allPass = true;
-for (const r of results) {
-  console.log(r.text);
-  if (!r.pass) allPass = false;
+for (const suite of suites) {
+  console.log(`\n── ${suite.file} ──`);
+  const results = await runTestPage(`http://localhost:${port}/${suite.file}`, suite.count);
+  for (const r of results) {
+    console.log(r.text);
+    if (!r.pass) allPass = false;
+  }
 }
 
 await browser.close();

@@ -1,4 +1,4 @@
-# Doc Maintenance Rule
+# Post Change Rules
 
 This rule applies to the `memorize_words` project only.
 
@@ -19,6 +19,13 @@ This rule applies to the `memorize_words` project only.
 **Description:** <what the bug was>
 **Fix:** <what was changed to fix it>
 ```
+
+### For all changes (features and bug fixes):
+- Add a test covering the new or fixed behavior.
+- Run the full test suite (`node run_tests.mjs`).
+- If any tests fail, identify the cause, fix the code, and re-run the suite.
+- Repeat until all tests pass before considering the change done.
+- Never skip this, even for small or cosmetic fixes.
 
 ### General rules:
 - Never skip these updates, even for small or cosmetic fixes.

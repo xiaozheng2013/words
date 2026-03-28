@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test: Bulk Add with Auto-Fill</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    .pass { color: green; } .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Test: Bulk Add with Auto-Fill</h2>
+  <ul id="results"></ul>
+  <iframe id="app" src="index.html" style="display:none" width="600" height="800"></iframe>
+
+  <script>
+    function assert(desc, condition) {
+      const li = document.createElement('li');
+      li.className = condition ? 'pass' : 'fail';
+      li.textContent = (condition ? '✅ PASS' : '❌ FAIL') + ': ' + desc;
+      document.getElementById('results').appendChild(li);
+    }
+
+    document.getElementById('app').addEventListener('load', function() {
+      const win = document.getElementById('app').contentWindow;
+      const doc = document.getElementById('app').contentDocument;
+
+      // Inject the entire async test suite into the iframe's own context
+      // so async/await and fetch mocking work within the same JS realm.
+      const script = doc.createElement('script');
+      script.textContent = `
+        (async function runTests() {
+          function reportAssert(desc, condition) {
+            window.parent.document.getElementById('results').insertAdjacentHTML('beforeend',
+              '<li class="' + (condition ? 'pass' : 'fail') + '">' +
+              (condition ? '✅ PASS' : '❌ FAIL') + ': ' + desc + '</li>'
+            );
+          }
+
+          function mockFetch(foundWords) {
+            window.fetch = async (url) => {
+              const word = decodeURIComponent(url.split('/').pop()).toLowerCase();
+              const entry = foundWords[word];
+              if (!entry) return { ok: false };
+              return {
+                ok: true,
+                json: async () => [{
+                  meanings: [{ definitions: [{ definition: entry.def, example: entry.example }] }]
+                }]
+              };
+            };
+          }
+
+          // Bootstrap a test user
+          localStorage.setItem('wm_users', JSON.stringify(['Tester']));
+          localStorage.setItem('wm_words_Tester', JSON.stringify([]));
+          selectUser('Tester');
+
+          // ── Test 1: mixed whitespace + newline input parsed correctly ──
+          mockFetch({
+            ephemeral:  { def: 'lasting for a very short time', example: 'ephemeral pleasures' },
+            ubiquitous: { def: 'present everywhere', example: '' },
+          });
+          document.getElementById('bulk-input').value = '  ephemeral\\nubiquitous  ';
+          await bulkAdd();
+          reportAssert('Mixed whitespace/newline: both words added', words.length === 2);
+
+          // ── Test 2: def includes definition + example when example exists ──
+          const eph = words.find(w => w.word === 'ephemeral');
+          reportAssert('def contains definition and example',
+            eph && eph.def === 'lasting for a very short time | Example: ephemeral pleasures');
+
+          // ── Test 3: def contains only definition when no example ──
+          const ubiq = words.find(w => w.word === 'ubiquitous');
+          reportAssert('def contains only definition when no example',
+            ubiq && ubiq.def === 'present everywhere');
+
+          // ── Test 4: duplicate is skipped ──
+          mockFetch({ ephemeral: { def: 'lasting for a very short time', example: '' } });
+          document.getElementById('bulk-input').value = 'ephemeral';
+          await bulkAdd();
+          reportAssert('Duplicate word is not added again',
+            words.filter(w => w.word === 'ephemeral').length === 1);
+
+          // ── Test 5: not-found word shows warning block ──
+          mockFetch({});
+          document.getElementById('bulk-input').value = 'xyzzyword';
+          await bulkAdd();
+          const notFoundDiv = document.getElementById('bulk-notfound');
+          reportAssert('Not-found warning block is visible',
+            notFoundDiv.style.display !== 'none');
+          reportAssert('Not-found word appears in warning block',
+            notFoundDiv.textContent.includes('xyzzyword'));
+
+          // ── Test 6: Ignore removes entry and hides block ──
+          ignoreNotFound('xyzzyword');
+          reportAssert('Ignore: entry removed from warning block',
+            !notFoundDiv.textContent.includes('xyzzyword'));
+          reportAssert('Ignore: block hidden when list is empty',
+            notFoundDiv.style.display === 'none');
+
+          // ── Test 7: Add Manually pre-fills word input ──
+          mockFetch({});
+          document.getElementById('bulk-input').value = 'unknownword';
+          await bulkAdd();
+          addManually('unknownword');
+          reportAssert('Add Manually: word input pre-filled',
+            document.getElementById('input-word').value === 'unknownword');
+          reportAssert('Add Manually: entry removed from warning block',
+            !document.getElementById('bulk-notfound').textContent.includes('unknownword'));
+        })();
+      `;
+      doc.body.appendChild(script);
+    });
+  </script>
+</body>
+</html>

@@ -93,7 +93,20 @@ The app has four screens. Only one is visible at a time. The default screen on l
 - Reject duplicates with a warning (case-insensitive match).
 - On success: save the new entry with default SM-2 values, clear the form, show a brief confirmation message.
 
-### 2. Import from Text File
+### 2. Bulk Add with Auto-Fill
+- A textarea accepts words separated by any whitespace (spaces, newlines, or a mix).
+- Duplicate words (case-insensitive, already in the user's list) are skipped silently.
+- For each unique word, the app calls the [Free Dictionary API](https://api.dictionaryapi.dev/api/v2/entries/en/<word>) to fetch the first definition and first example sentence.
+- The `def` field is stored as `<definition> | Example: <example>` (example omitted if absent).
+- A live progress indicator shows `Fetching N / Total: <word>…` during the fetch loop.
+- After completion, a summary is shown: words added, duplicates skipped, and not-found count.
+- Words not found in the dictionary are collected and displayed in a **warning block**:
+  - Each not-found word has two actions:
+    - **Add Manually** — pre-fills the single-word form with that word and dismisses it from the list.
+    - **Ignore** — dismisses the entry from the list.
+  - The warning block disappears automatically when all not-found entries are resolved.
+
+### 3. Import from Text File
 - File format: one entry per line — `word|definition` (pipe-separated). Definition is optional.
 - Strip trailing numeric suffixes from the word part (e.g. `"apple 3"` → `"apple"`).
 - Skip duplicates silently (case-insensitive).
