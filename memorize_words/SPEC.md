@@ -12,7 +12,7 @@ The app supports multiple independent users on the same device.
 
 - On load, a **User Selection screen** is shown before the main app.
 - Users can be created (unique name required) or deleted (with confirmation; deletes all their data).
-- Selecting a user loads their personal word list and enters the main app.
+- Selecting a user loads their personal word list, enters the main app, and always lands on the **Stats** view regardless of which view was previously active.
 - A **Switch User** button in the nav bar returns to the User Selection screen.
 - Each user's data is stored under a separate `localStorage` key: `wm_words_<username>`.
 - The user list is stored under `wm_users` in `localStorage`.

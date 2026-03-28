@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test: Switch User Resets to Stats</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    .pass { color: green; } .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Test: Switch User Resets to Stats Tab</h2>
+  <ul id="results"></ul>
+
+  <!-- Embed the app in a hidden iframe -->
+  <iframe id="app" src="index.html" style="display:none" width="600" height="800"></iframe>
+
+  <script>
+    const results = document.getElementById('results');
+
+    function assert(desc, condition) {
+      const li = document.createElement('li');
+      li.className = condition ? 'pass' : 'fail';
+      li.textContent = (condition ? '✅ PASS' : '❌ FAIL') + ': ' + desc;
+      results.appendChild(li);
+    }
+
+    document.getElementById('app').addEventListener('load', function onLoad() {
+      // Only run once the iframe is fully loaded
+      const win = document.getElementById('app').contentWindow;
+      const doc = document.getElementById('app').contentDocument;
+
+      // Setup: create two users in localStorage
+      win.localStorage.setItem('wm_users', JSON.stringify(['Alice', 'Bob']));
+      win.localStorage.setItem('wm_words_Alice', JSON.stringify([]));
+      win.localStorage.setItem('wm_words_Bob', JSON.stringify([]));
+
+      // Re-initialize the app state by calling selectUser for Alice
+      win.selectUser('Alice');
+
+      // Simulate navigating to 'My Words' tab
+      const listBtn = Array.from(doc.querySelectorAll('nav button')).find(b => b.textContent.trim() === 'My Words');
+      listBtn.click();
+
+      // Verify 'My Words' is active before switch
+      assert('My Words tab is active after clicking it', doc.getElementById('view-list').classList.contains('active'));
+      assert('Stats tab is NOT active before switch', !doc.getElementById('view-stats').classList.contains('active'));
+
+      // Now switch user (go back to user screen)
+      win.switchUser();
+
+      // Select Bob
+      win.selectUser('Bob');
+
+      // After selecting Bob, Stats should be the active view
+      assert('Stats view is active after selecting new user', doc.getElementById('view-stats').classList.contains('active'));
+      assert('My Words view is NOT active after selecting new user', !doc.getElementById('view-list').classList.contains('active'));
+
+      // Stats nav button should be active
+      const statsBtn = Array.from(doc.querySelectorAll('nav button')).find(b => b.textContent.trim() === 'Stats');
+      assert('Stats nav button is highlighted after selecting new user', statsBtn && statsBtn.classList.contains('active'));
+    });
+  </script>
+</body>
+</html>
