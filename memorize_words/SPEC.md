@@ -186,6 +186,22 @@ The app has four screens. Only one is visible at a time. The default screen on l
 
 ---
 
+## Progressive Web App (PWA)
+
+The app ships as a PWA to support installation on mobile devices (including iPhone).
+
+- `manifest.json` is served alongside `index.html` and declares the app name (`Word Memorizer`), short name (`WordMem`), display mode (`standalone`), theme color (`#3b82f6`), and background color (`#f0f4f8`).
+- The following Apple-specific meta tags are present in `<head>`:
+  - `apple-mobile-web-app-capable` — enables standalone mode when launched from the iOS home screen.
+  - `apple-mobile-web-app-status-bar-style` — sets the status bar appearance.
+  - `apple-mobile-web-app-title` — sets the home screen label to `WordMem`.
+  - `theme-color` — tints the browser UI on supported platforms.
+- The app must be served over HTTPS for PWA installation to work on iOS.
+- All functionality works offline except **Bulk Add with Auto-Fill**, which requires internet access to call the Free Dictionary API.
+- See `IPHONE_INSTALL.md` for step-by-step installation instructions.
+
+---
+
 ## Edge Cases
 
 - Submitting an empty word field shows an error; definition is always optional.

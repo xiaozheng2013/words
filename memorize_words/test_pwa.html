@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PWA Meta Tests</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    li.pass::before { content: '✅ '; }
+    li.fail::before { content: '❌ '; }
+  </style>
+</head>
+<body>
+  <h2>PWA Meta Tag Tests</h2>
+  <ul id="results"></ul>
+
+  <script>
+    const results = document.getElementById('results');
+
+    function assert(label, condition) {
+      const li = document.createElement('li');
+      li.textContent = label;
+      li.className = condition ? 'pass' : 'fail';
+      results.appendChild(li);
+    }
+
+    // Fetch index.html and parse it as a document
+    fetch('/index.html')
+      .then(r => r.text())
+      .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const manifestLink = doc.querySelector('link[rel="manifest"]');
+        assert('manifest link tag is present', !!manifestLink);
+        assert('manifest href is manifest.json', manifestLink?.getAttribute('href') === 'manifest.json');
+
+        const capable = doc.querySelector('meta[name="apple-mobile-web-app-capable"]');
+        assert('apple-mobile-web-app-capable is "yes"', capable?.getAttribute('content') === 'yes');
+
+        const statusBar = doc.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+        assert('apple-mobile-web-app-status-bar-style is present', !!statusBar);
+
+        const appTitle = doc.querySelector('meta[name="apple-mobile-web-app-title"]');
+        assert('apple-mobile-web-app-title is "WordMem"', appTitle?.getAttribute('content') === 'WordMem');
+
+        const themeColor = doc.querySelector('meta[name="theme-color"]');
+        assert('theme-color meta tag is present', !!themeColor);
+        assert('theme-color is #3b82f6', themeColor?.getAttribute('content') === '#3b82f6');
+      });
+
+    // Fetch and validate manifest.json
+    fetch('/manifest.json')
+      .then(r => r.json())
+      .then(m => {
+        assert('manifest name is "Word Memorizer"', m.name === 'Word Memorizer');
+        assert('manifest short_name is "WordMem"', m.short_name === 'WordMem');
+        assert('manifest display is "standalone"', m.display === 'standalone');
+        assert('manifest has at least one icon', Array.isArray(m.icons) && m.icons.length > 0);
+      });
+  </script>
+</body>
+</html>
