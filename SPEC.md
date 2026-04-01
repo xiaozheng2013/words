@@ -121,6 +121,7 @@ The app has four screens. Only one is visible at a time. The default screen on l
 
 #### Showing a card
 - Display the word and a "tap to reveal" prompt.
+- Show a 🔊 button next to the word that speaks the word aloud using the browser's Web Speech API (`speechSynthesis`, language `en-US`).
 - Show a progress counter: current position out of total cards in session.
 - If the word collection is empty: show an empty-state message.
 - If the session is complete: show a completion message and the next upcoming review date.

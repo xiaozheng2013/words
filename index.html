@@ -443,6 +443,18 @@
       showCard();
     }
 
+    function speakWord(word) {
+      const utt = new SpeechSynthesisUtterance(word);
+      utt.lang = 'en-US';
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utt);
+    }
+
+    function speakBtn(word) {
+      return `<button onclick="event.stopPropagation();speakWord('${word.replace(/'/g, "\\'")}')"
+        style="margin-top:0.6rem;background:none;border:1px solid #cbd5e1;border-radius:6px;padding:0.3rem 0.7rem;cursor:pointer;font-size:1rem" title="Pronounce">🔊</button>`;
+    }
+
     function showCard() {
       const card = document.getElementById('flashcard');
       const content = document.getElementById('card-content');
@@ -467,7 +479,7 @@
       flipped = false;
       const w = session[sessionIdx];
       progress.textContent = `${sessionIdx + 1} / ${session.length}`;
-      content.innerHTML = `<div><div class="word">${w.word}</div><div class="hint">tap to reveal</div></div>`;
+      content.innerHTML = `<div><div class="word">${w.word}</div>${speakBtn(w.word)}<div class="hint">tap to reveal</div></div>`;
     }
 
     function flipCard() {
@@ -476,7 +488,7 @@
       flipped = true;
       const w = session[sessionIdx];
       document.getElementById('card-content').innerHTML =
-        `<div><div class="word">${w.word}</div><div class="definition">${w.def}</div></div>`;
+        `<div><div class="word">${w.word}</div>${speakBtn(w.word)}<div class="definition">${w.def}</div></div>`;
     }
 
     document.addEventListener('keydown', e => {
