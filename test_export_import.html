@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test: Export / Import Words</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    .pass { color: green; } .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Test: Export / Import Words</h2>
+  <ul id="results"></ul>
+  <iframe id="app" src="index.html" style="display:none" width="600" height="800"></iframe>
+
+  <script>
+    document.getElementById('app').addEventListener('load', function() {
+      const win = document.getElementById('app').contentWindow;
+      const doc = document.getElementById('app').contentDocument;
+
+      const script = doc.createElement('script');
+      script.textContent = `
+        (async function runTests() {
+          function assert(desc, condition) {
+            window.parent.document.getElementById('results').insertAdjacentHTML('beforeend',
+              '<li class="' + (condition ? 'pass' : 'fail') + '">' +
+              (condition ? '✅ PASS' : '❌ FAIL') + ': ' + desc + '</li>'
+            );
+          }
+
+          const sampleWords = [
+            { word: 'ephemeral', def: 'lasting a short time', known: false, interval: 5, easeFactor: 2.5, nextReview: Date.now() },
+            { word: 'ubiquitous', def: 'present everywhere', known: false, interval: 0, easeFactor: 2.5, nextReview: Date.now() },
+          ];
+
+          // ── Test 1: downloadWords produces correct JSON ──
+          localStorage.setItem('wm_users', JSON.stringify(['Exporter']));
+          localStorage.setItem('wm_words_Exporter', JSON.stringify(sampleWords));
+          selectUser('Exporter');
+
+          let capturedBlob = null;
+          const origCreateObjectURL = URL.createObjectURL;
+          URL.createObjectURL = (blob) => { capturedBlob = blob; return 'blob:mock'; };
+          const origClick = HTMLAnchorElement.prototype.click;
+          HTMLAnchorElement.prototype.click = function() {};
+
+          downloadWords();
+
+          URL.createObjectURL = origCreateObjectURL;
+          HTMLAnchorElement.prototype.click = origClick;
+
+          const blobText = await capturedBlob.text();
+          const parsed = JSON.parse(blobText);
+          assert('Download: exported JSON is an array', Array.isArray(parsed));
+          assert('Download: exported array has correct length', parsed.length === 2);
+          assert('Download: exported words match source', parsed[0].word === 'ephemeral' && parsed[1].word === 'ubiquitous');
+
+          // ── Test 2: restoreWords adds new words ──
+          localStorage.setItem('wm_users', JSON.stringify(['Importer']));
+          localStorage.setItem('wm_words_Importer', JSON.stringify([]));
+          selectUser('Importer');
+
+          const importData = JSON.stringify([
+            { word: 'serendipity', def: 'happy accident', known: false, interval: 3, easeFactor: 2.6, nextReview: Date.now() }
+          ]);
+          const fakeEvent = {
+            target: {
+              files: [new File([importData], 'test.json', { type: 'application/json' })],
+              value: ''
+            }
+          };
+          await new Promise(resolve => {
+            const origRestore = restoreWords;
+            restoreWords(fakeEvent);
+            setTimeout(resolve, 100);
+          });
+          assert('Restore: new word added', words.find(w => w.word === 'serendipity') !== undefined);
+          assert('Restore: word count is 1', words.length === 1);
+
+          // ── Test 3: restoreWords updates existing word ──
+          const updatedData = JSON.stringify([
+            { word: 'serendipity', def: 'updated def', known: true, interval: 25, easeFactor: 2.8, nextReview: Date.now() }
+          ]);
+          const fakeEvent2 = {
+            target: {
+              files: [new File([updatedData], 'test2.json', { type: 'application/json' })],
+              value: ''
+            }
+          };
+          await new Promise(resolve => {
+            restoreWords(fakeEvent2);
+            setTimeout(resolve, 100);
+          });
+          const updated = words.find(w => w.word === 'serendipity');
+          assert('Restore: existing word updated (not duplicated)', words.length === 1);
+          assert('Restore: updated word has new def', updated && updated.def === 'updated def');
+
+          // ── Test 4: restoreWords rejects invalid JSON ──
+          const badEvent = {
+            target: {
+              files: [new File(['not json at all'], 'bad.json', { type: 'application/json' })],
+              value: ''
+            }
+          };
+          await new Promise(resolve => {
+            restoreWords(badEvent);
+            setTimeout(resolve, 100);
+          });
+          const msg = document.getElementById('restore-msg');
+          assert('Restore: invalid file shows error message', msg && msg.style.color === 'red');
+        })();
+      `;
+      doc.body.appendChild(script);
+    });
+  </script>
+</body>
+</html>

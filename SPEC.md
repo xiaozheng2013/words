@@ -158,6 +158,11 @@ The app has four screens. Only one is visible at a time. The default screen on l
 - "Reset All Progress": after confirmation, reset all entries to default SM-2 values while keeping the words themselves.
 - "Delete All Words": after confirmation, remove all entries entirely.
 
+### 7. Export / Import (Cross-Environment Sync)
+- "Download Words": exports the current user's word list as a JSON file named `wordmem_<username>_<YYYY-MM-DD>.json`.
+- "Restore Words": imports a previously downloaded JSON file. For each entry, if the word already exists it is overwritten (updated); otherwise it is added. A summary of added/updated counts is shown.
+- These two features allow moving a user's word list between different hosting environments (e.g. local dev and GitHub Pages).
+
 ---
 
 ## UI Layout

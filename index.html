@@ -175,6 +175,14 @@
       <div class="stat-box"><h3>Next Review Date</h3><p id="stat-next" style="font-size:1.2rem">—</p></div>
       <button id="reset-btn" onclick="resetProgress()">Reset All Progress</button>
       <button id="reset-btn" style="background:#fef9c3;color:#b45309" onclick="deleteAllWords()">Delete All Words</button>
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+        <button onclick="downloadWords()" style="flex:1;padding:0.5rem 1rem;background:#e0f2fe;color:#0369a1;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem">⬇️ Download Words</button>
+        <label style="flex:1;padding:0.5rem 1rem;background:#f0fdf4;color:#15803d;border:none;border-radius:6px;cursor:pointer;font-size:0.9rem;text-align:center">
+          ⬆️ Restore Words
+          <input type="file" accept=".json" style="display:none" onchange="restoreWords(event)" />
+        </label>
+      </div>
+      <div id="restore-msg" style="font-size:0.9rem;min-height:1.2rem"></div>
     </div>
   </div>
 
@@ -563,6 +571,48 @@
       words = [];
       save();
       renderStats();
+    }
+
+    function downloadWords() {
+      const data = JSON.stringify(words, null, 2);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+      a.download = `wordmem_${currentUser}_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+    }
+
+    function restoreWords(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const msg = document.getElementById('restore-msg');
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (!Array.isArray(imported)) throw new Error('invalid');
+          let added = 0, updated = 0;
+          imported.forEach(entry => {
+            if (!entry.word) return;
+            const existing = words.find(w => w.word.toLowerCase() === entry.word.toLowerCase());
+            if (existing) {
+              Object.assign(existing, entry);
+              updated++;
+            } else {
+              words.push(entry);
+              added++;
+            }
+          });
+          save();
+          renderStats();
+          msg.style.color = 'green';
+          msg.textContent = `Restored: ${added} added, ${updated} updated.`;
+        } catch {
+          msg.style.color = 'red';
+          msg.textContent = 'Invalid file.';
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
     }
 
     function resetProgress() {

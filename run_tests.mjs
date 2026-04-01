@@ -37,9 +37,10 @@ async function runTestPage(url, expectedCount) {
 }
 
 const suites = [
-  { file: 'test_switch_user.html', count: 5 },
-  { file: 'test_bulk_add.html',    count: 11 },
-  { file: 'test_pwa.html',         count: 11 },
+  { file: 'test_switch_user.html',    count: 5 },
+  { file: 'test_bulk_add.html',       count: 11 },
+  { file: 'test_pwa.html',            count: 11 },
+  { file: 'test_export_import.html',  count: 7 },
 ];
 
 let allPass = true;
