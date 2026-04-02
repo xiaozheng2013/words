@@ -1,5 +1,17 @@
 # Release Notes
 
+## v1.2.0 — Pronunciation, iPhone Guide & Data Portability
+
+### Summary
+Adds word pronunciation playback, an iPhone installation guide, and the ability to export/import user data for backup and device transfer.
+
+### New Features
+- **Pronunciation support** — play audio pronunciation for words during flashcard review using the Free Dictionary API audio data
+- **Export / Import data** — download all user word data as a JSON file and re-import it on any device, enabling backups and cross-device transfers
+- **iPhone install guide** — added `IPHONE_INSTALL.md` with step-by-step instructions for installing the app as a PWA on iOS via Safari
+
+---
+
 ## v1.1.0 — Auto Word Meaning Retrieval
 
 ### Summary
