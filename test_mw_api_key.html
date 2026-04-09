@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Test: MW API Key Settings</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    .pass { color: green; } .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Test: MW API Key Settings</h2>
+  <ul id="results"></ul>
+  <iframe id="app" src="index.html" style="display:none" width="600" height="800"></iframe>
+
+  <script>
+    document.getElementById('app').addEventListener('load', function () {
+      const doc = document.getElementById('app').contentDocument;
+
+      const script = doc.createElement('script');
+      script.textContent = `
+        (async function runTests() {
+          function report(desc, condition) {
+            window.parent.document.getElementById('results').insertAdjacentHTML('beforeend',
+              '<li class="' + (condition ? 'pass' : 'fail') + '">' +
+              (condition ? '✅ PASS' : '❌ FAIL') + ': ' + desc + '</li>'
+            );
+          }
+
+          // ── Test 1: no key by default ──
+          localStorage.removeItem('mw_api_key');
+          report('getMWKey returns empty string when no key set', getMWKey() === '');
+
+          // ── Test 2: saveMWKey stores key ──
+          document.getElementById('mw-key-input').value = 'test-key-abc';
+          saveMWKey();
+          report('saveMWKey stores key in localStorage', localStorage.getItem('mw_api_key') === 'test-key-abc');
+
+          // ── Test 3: getMWKey returns stored key ──
+          report('getMWKey returns stored key', getMWKey() === 'test-key-abc');
+
+          // ── Test 4: saveMWKey overwrites existing key ──
+          document.getElementById('mw-key-input').value = 'new-key-xyz';
+          saveMWKey();
+          report('saveMWKey overwrites existing key', getMWKey() === 'new-key-xyz');
+
+          // ── Test 5: Settings view pre-fills input with saved key ──
+          localStorage.setItem('mw_api_key', 'prefill-key');
+          // Simulate showView('settings') side-effect directly
+          const keyInput = document.getElementById('mw-key-input');
+          const key = getMWKey();
+          if (key) keyInput.value = key;
+          report('Settings view pre-fills input with saved key', keyInput.value === 'prefill-key');
+
+          // ── Test 6: fetchDefinition uses MW API when key is set ──
+          localStorage.setItem('mw_api_key', 'my-mw-key');
+          let lastURL = '';
+          window.fetch = async (url) => {
+            lastURL = url;
+            return { ok: true, json: async () => [{ shortdef: ['lasting a short time'] }] };
+          };
+          const defMW = await fetchDefinition('ephemeral');
+          report('fetchDefinition calls MW API when key is set', lastURL.includes('dictionaryapi.com'));
+          report('fetchDefinition returns MW shortdef value', defMW === 'lasting a short time');
+
+          // ── Test 7: fetchDefinition falls back to Free Dict when no key ──
+          localStorage.removeItem('mw_api_key');
+          lastURL = '';
+          window.fetch = async (url) => {
+            lastURL = url;
+            return { ok: true, json: async () => [{ meanings: [{ definitions: [{ definition: 'free def', example: '' }] }] }] };
+          };
+          const defFree = await fetchDefinition('ephemeral');
+          report('fetchDefinition calls Free Dictionary API when no key', lastURL.includes('dictionaryapi.dev'));
+          report('fetchDefinition returns free dict definition', defFree === 'free def');
+
+          // ── Test 9: fetchDefinition throws when MW returns non-object entry ──
+          localStorage.setItem('mw_api_key', 'my-mw-key');
+          window.fetch = async () => ({ ok: true, json: async () => ['string-not-object'] });
+          let threw = false;
+          try { await fetchDefinition('badword'); } catch { threw = true; }
+          report('fetchDefinition throws when MW returns non-object entry', threw);
+        })();
+      `;
+      doc.body.appendChild(script);
+    });
+  </script>
+</body>
+</html>

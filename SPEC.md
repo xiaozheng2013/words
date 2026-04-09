@@ -77,12 +77,13 @@ known      = (interval >= 21)
 
 The app has four screens. Only one is visible at a time. The default screen on load is **Stats**.
 
-| Screen    | Description                                      | Side effect on open    |
-|-----------|--------------------------------------------------|------------------------|
-| Stats     | Displays learning progress metrics               | Refresh stats          |
-| Review    | Flashcard review session                         | Start a new session    |
-| My Words  | Browsable list of all words                      | Refresh list           |
-| Add Word  | Form to add words manually or via file import    | None                   |
+| Screen    | Description                                      | Side effect on open              |
+|-----------|--------------------------------------------------|----------------------------------|
+| Stats     | Displays learning progress metrics               | Refresh stats                    |
+| Review    | Flashcard review session                         | Start a new session              |
+| My Words  | Browsable list of all words                      | Refresh list                     |
+| Add Word  | Form to add words manually or via file import    | None                             |
+| Settings  | Manage Merriam-Webster API key                   | Pre-fill key input if key exists |
 
 ---
 
@@ -96,8 +97,9 @@ The app has four screens. Only one is visible at a time. The default screen on l
 ### 2. Bulk Add with Auto-Fill
 - A textarea accepts words separated by any whitespace (spaces, newlines, commas, or a mix).
 - Duplicate words (case-insensitive, already in the user's list) are skipped silently.
-- For each unique word, the app calls the [Free Dictionary API](https://api.dictionaryapi.dev/api/v2/entries/en/<word>) to fetch the first definition and first example sentence.
-- The `def` field is stored as `<definition> | Example: <example>` (example omitted if absent).
+- For each unique word, the app fetches a definition using the following priority:
+  - **If a Merriam-Webster API key is saved** (`mw_api_key` in `localStorage`): calls `https://www.dictionaryapi.com/api/v3/references/collegiate/json/<word>?key=<key>` and uses `shortdef[0]` from the first result entry.
+  - **Otherwise (fallback)**: calls the [Free Dictionary API](https://api.dictionaryapi.dev/api/v2/entries/en/<word>) and uses the first definition and example sentence. The `def` field is stored as `<definition> | Example: <example>` (example omitted if absent).
 - A live progress indicator shows `Fetching N / Total: <word>…` during the fetch loop.
 - After completion, a summary is shown: words added, duplicates skipped, and not-found count.
 - Words not found in the dictionary are collected and displayed in a **warning block**:
@@ -154,6 +156,13 @@ The app has four screens. Only one is visible at a time. The default screen on l
 | Mature          | Count of entries where `interval >= 21`                  |
 | Mastery %       | `mature / total × 100`, displayed as percentage + progress bar |
 | Next Review     | Earliest `nextReview` date that is in the future         |
+
+### 8. Settings — Merriam-Webster API Key
+- A text input accepts the user's Merriam-Webster Collegiate Dictionary API key.
+- Saving writes the key to `localStorage` under `mw_api_key` (global, not per-user).
+- Opening the Settings view pre-fills the input with the currently saved key, if any.
+- A link to [dictionaryapi.com/register/index](https://dictionaryapi.com/register/index) is shown so users can obtain a free key.
+- The key is never sent anywhere other than the Merriam-Webster API endpoint.
 
 ### 6. Reset / Delete
 - "Reset All Progress": after confirmation, reset all entries to default SM-2 values while keeping the words themselves.

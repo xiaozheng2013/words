@@ -111,6 +111,7 @@
     <button onclick="showView('review')">Review</button>
     <button onclick="showView('list')">My Words</button>
     <button onclick="showView('add')">Add Word</button>
+    <button onclick="showView('settings')">⚙️ Settings</button>
     <button onclick="switchUser()">👤 Switch</button>
   </nav>
 
@@ -157,6 +158,17 @@
   <!-- Word List -->
   <div id="view-list" class="view">
     <div id="word-list"></div>
+  </div>
+
+  <!-- Settings -->
+  <div id="view-settings" class="view">
+    <div class="add-form">
+      <label style="font-size:0.95rem;color:#475569">Merriam-Webster API Key</label>
+      <input id="mw-key-input" type="text" placeholder="Paste your API key here" />
+      <button onclick="saveMWKey()">Save Key</button>
+      <div id="mw-key-msg" style="font-size:0.9rem;min-height:1.2rem"></div>
+      <p style="font-size:0.85rem;color:#64748b">Get a free key at <a href="https://dictionaryapi.com/register/index" target="_blank">dictionaryapi.com</a>. The key is stored only in your browser's localStorage and never uploaded anywhere.</p>
+    </div>
   </div>
 
   <!-- Stats -->
@@ -288,6 +300,10 @@
       if (name === 'review') startSession();
       if (name === 'list') renderList();
       if (name === 'stats') renderStats();
+      if (name === 'settings') {
+        const key = getMWKey();
+        if (key) document.getElementById('mw-key-input').value = key;
+      }
     }
 
     function importFile(e) {
@@ -315,6 +331,38 @@
       reader.readAsText(file);
     }
 
+    function getMWKey() { return localStorage.getItem('mw_api_key') || ''; }
+
+    function saveMWKey() {
+      const key = document.getElementById('mw-key-input').value.trim();
+      const msg = document.getElementById('mw-key-msg');
+      if (!key) { msg.style.color = 'red'; msg.textContent = 'Please enter a key.'; return; }
+      localStorage.setItem('mw_api_key', key);
+      msg.style.color = 'green';
+      msg.textContent = 'Key saved!';
+      setTimeout(() => msg.textContent = '', 2000);
+    }
+
+    async function fetchDefinition(w) {
+      const mwKey = getMWKey();
+      if (mwKey) {
+        const res = await fetch(`https://www.dictionaryapi.com/api/v3/references/collegiate/json/${encodeURIComponent(w)}?key=${mwKey}`);
+        if (!res.ok) throw new Error('not found');
+        const data = await res.json();
+        const entry = data[0];
+        if (!entry || typeof entry !== 'object' || !entry.shortdef) throw new Error('not found');
+        return entry.shortdef[0] || '';
+      } else {
+        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`);
+        if (!res.ok) throw new Error('not found');
+        const data = await res.json();
+        const meaning = data[0]?.meanings?.[0];
+        const def = meaning?.definitions?.[0]?.definition || '';
+        const example = meaning?.definitions?.[0]?.example || '';
+        return [def, example ? `Example: ${example}` : ''].filter(Boolean).join(' | ');
+      }
+    }
+
     async function bulkAdd() {
       const raw = document.getElementById('bulk-input').value;
       const words_input = [...new Set(raw.trim().split(/[\s,]+/).filter(Boolean))];
@@ -335,13 +383,7 @@
         if (words.find(x => x.word.toLowerCase() === w.toLowerCase())) { skipped++; continue; }
 
         try {
-          const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(w)}`);
-          if (!res.ok) throw new Error('not found');
-          const data = await res.json();
-          const meaning = data[0]?.meanings?.[0];
-          const def = meaning?.definitions?.[0]?.definition || '';
-          const example = meaning?.definitions?.[0]?.example || '';
-          const defText = [def, example ? `Example: ${example}` : ''].filter(Boolean).join(' | ');
+          const defText = await fetchDefinition(w);
           words.push({ word: w, def: defText, known: false, interval: 0, easeFactor: 2.5, nextReview: daysFromNow(0) });
           added++;
         } catch {

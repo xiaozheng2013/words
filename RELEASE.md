@@ -1,5 +1,17 @@
 # Release Notes
 
+## v1.3.0 — Merriam-Webster API Integration
+
+### Summary
+Adds a Settings screen where users can save their own Merriam-Webster API key. When a key is present, Bulk Add uses the MW Collegiate Dictionary API for richer definitions; otherwise it falls back to the Free Dictionary API.
+
+### New Features
+- **Settings screen** — new nav tab (⚙️ Settings) with an input to save/update the MW API key, stored in `localStorage` under `mw_api_key`
+- **MW API support in Bulk Add** — when `mw_api_key` is set, definitions are fetched from the Merriam-Webster Collegiate Dictionary API (`shortdef[0]`)
+- **Automatic fallback** — if no MW key is configured, Bulk Add continues to use the Free Dictionary API as before
+
+---
+
 ## v1.2.0 — Pronunciation, iPhone Guide & Data Portability
 
 ### Summary
