@@ -41,7 +41,7 @@ const suites = [
   { file: 'test_bulk_add.html',       count: 11 },
   { file: 'test_pwa.html',            count: 11 },
   { file: 'test_export_import.html',  count: 7 },
-  { file: 'test_mw_api_key.html',     count: 9 },
+  { file: 'test_mw_api_key.html',     count: 10 },
 ];
 
 let allPass = true;

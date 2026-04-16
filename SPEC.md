@@ -167,7 +167,7 @@ The app has four screens. Only one is visible at a time. The default screen on l
 ### 8. Settings — Merriam-Webster API Key
 - A text input accepts the user's Merriam-Webster Collegiate Dictionary API key.
 - Saving writes the key to `localStorage` under `mw_api_key` (global, not per-user).
-- Opening the Settings view pre-fills the input with the currently saved key, if any.
+- Opening the Settings view pre-fills the input with the currently saved key, if any. The input is masked (type `password`) so the key is never displayed in plain text.
 - A link to [dictionaryapi.com/register/index](https://dictionaryapi.com/register/index) is shown so users can obtain a free key.
 - The key is never sent anywhere other than the Merriam-Webster API endpoint.
 

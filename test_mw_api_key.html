@@ -52,6 +52,9 @@
           if (key) keyInput.value = key;
           report('Settings view pre-fills input with saved key', keyInput.value === 'prefill-key');
 
+          // ── Test 5b: API key input is masked (type=password) ──
+          report('API key input type is password', keyInput.type === 'password');
+
           // ── Test 6: fetchDefinition uses MW API when key is set ──
           localStorage.setItem('mw_api_key', 'my-mw-key');
           let lastURL = '';
