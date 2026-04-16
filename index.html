@@ -139,6 +139,10 @@
   <!-- Review -->
   <div id="view-review" class="view">
     <div id="card-area">
+      <div style="display:flex;gap:0.5rem;justify-content:center;margin-bottom:0.5rem">
+        <button id="mode-flashcard" onclick="setReviewMode('flashcard')" style="padding:0.35rem 1rem;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;background:#3b82f6;color:white;font-size:0.9rem">Flashcard</button>
+        <button id="mode-writing" onclick="setReviewMode('writing')" style="padding:0.35rem 1rem;border:1px solid #cbd5e1;border-radius:6px;cursor:pointer;background:white;color:#333;font-size:0.9rem">✏️ Writing</button>
+      </div>
       <div id="progress-text"></div>
       <div class="card" id="flashcard" onclick="flipCard()">
         <div id="card-content"></div>
@@ -205,6 +209,9 @@
     let words = [];
     let session = [], sessionIdx = 0, flipped = false;
     let correctAnswersInSession = 0;
+    let reviewMode = 'flashcard'; // 'flashcard' | 'writing'
+    let writingAttempts = 0; // attempts used on current writing card
+    let writingRevealed = false; // true after answer resolved (correct or 3 wrong)
 
     const today = () => new Date().setHours(0,0,0,0);
     const daysFromNow = d => today() + d * 86400000;
@@ -475,12 +482,21 @@
       renderList();
     }
 
+    function setReviewMode(mode) {
+      reviewMode = mode;
+      document.getElementById('mode-flashcard').style.background = mode === 'flashcard' ? '#3b82f6' : 'white';
+      document.getElementById('mode-flashcard').style.color = mode === 'flashcard' ? 'white' : '#333';
+      document.getElementById('mode-writing').style.background = mode === 'writing' ? '#3b82f6' : 'white';
+      document.getElementById('mode-writing').style.color = mode === 'writing' ? 'white' : '#333';
+      startSession();
+    }
+
     function startSession(all = false) {
       const due = words.filter(w => w.nextReview <= today());
       const pool = all ? [...words] : due;
       session = pool.sort(() => Math.random() - 0.5);
       sessionIdx = 0;
-      correctAnswersInSession = 0; // Reset counter
+      correctAnswersInSession = 0;
       document.getElementById('no-cards-msg').style.display = 'none';
       showCard();
     }
@@ -497,6 +513,10 @@
         style="margin-top:0.6rem;background:none;border:1px solid #cbd5e1;border-radius:6px;padding:0.3rem 0.7rem;cursor:pointer;font-size:1rem" title="Pronounce">🔊</button>`;
     }
 
+    function buildHint(word, lettersRevealed) {
+      return word.split('').map((ch, i) => i < lettersRevealed ? ch : '_').join(' ');
+    }
+
     function showCard() {
       const card = document.getElementById('flashcard');
       const content = document.getElementById('card-content');
@@ -507,6 +527,7 @@
         document.getElementById('no-cards-msg').style.display = 'block';
         content.innerHTML = '';
         progress.textContent = '';
+        actions.style.display = 'none';
         return;
       }
 
@@ -515,26 +536,122 @@
         const nextDate = next.length ? new Date(next[0].nextReview).toLocaleDateString() : '';
         content.innerHTML = `<div class="word" style="font-size:1.2rem">${sessionIdx > 0 ? '✅ Session done!' : '🎉 All caught up!'}<br><small style="font-weight:400;color:#64748b">${nextDate ? 'Next review: ' + nextDate : ''}</small></div>`;
         progress.textContent = '';
+        actions.style.display = 'none';
+        card.onclick = null;
         return;
       }
 
-      flipped = false;
       const w = session[sessionIdx];
       progress.textContent = `${sessionIdx + 1} / ${session.length}`;
-      content.innerHTML = `<div><div class="word">${w.word}</div>${speakBtn(w.word)}<div class="hint">tap to reveal</div></div>`;
+
+      if (reviewMode === 'writing') {
+        writingAttempts = 0;
+        writingRevealed = false;
+        actions.style.display = 'none';
+        card.onclick = null;
+        renderWritingCard(w, '', null);
+        speakWord(w.word);
+      } else {
+        flipped = false;
+        actions.style.display = 'flex';
+        actions.style.visibility = 'hidden';
+        card.onclick = flipCard;
+        content.innerHTML = `<div><div class="word">${w.word}</div>${speakBtn(w.word)}<div class="hint">tap to reveal</div></div>`;
+      }
+    }
+
+    function renderWritingCard(w, feedback, feedbackColor) {
+      const maxAttempts = 3;
+      const remaining = maxAttempts - writingAttempts;
+      const dots = '●'.repeat(remaining) + '○'.repeat(maxAttempts - remaining);
+      const hintText = writingAttempts >= 1 ? buildHint(w.word, writingAttempts) : '';
+      document.getElementById('card-content').innerHTML = `
+        <div style="width:100%">
+          <div style="margin-bottom:0.6rem">${speakBtn(w.word)}</div>
+          ${feedback ? `<div style="color:${feedbackColor};font-weight:600;margin-bottom:0.4rem">${feedback}</div>` : ''}
+          ${hintText ? `<div style="font-family:monospace;font-size:1rem;letter-spacing:0.15em;color:#64748b;margin-bottom:0.6rem">${hintText}</div>` : ''}
+          <input id="writing-input" type="text" placeholder="Type the word…"
+            style="width:100%;padding:0.6rem 0.8rem;border:1px solid #cbd5e1;border-radius:6px;font-size:1rem;margin-bottom:0.5rem"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();submitWriting()}" />
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <button onclick="submitWriting()" style="padding:0.5rem 1.2rem;background:#3b82f6;color:white;border:none;border-radius:6px;font-size:1rem;cursor:pointer">Submit</button>
+            <span style="font-size:1.2rem;letter-spacing:0.1em;color:#64748b">${dots}</span>
+          </div>
+        </div>`;
+      document.getElementById('writing-input').focus();
+    }
+
+    function renderWritingReveal(w, correct) {
+      const color = correct ? '#16a34a' : '#ef4444';
+      const icon = correct ? '✅' : '❌';
+      document.getElementById('card-content').innerHTML = `
+        <div style="width:100%">
+          <div style="font-size:1.6rem;font-weight:700;color:${color};margin-bottom:0.3rem">${icon} ${w.word}</div>
+          ${speakBtn(w.word)}
+          <div style="color:#475569;margin-top:0.5rem;font-size:1rem">${w.def || ''}</div>
+          <button onclick="advanceWriting()" style="margin-top:1rem;padding:0.5rem 1.2rem;background:#3b82f6;color:white;border:none;border-radius:6px;font-size:1rem;cursor:pointer">Next →</button>
+        </div>`;
+    }
+
+    function submitWriting() {
+      if (writingRevealed) { advanceWriting(); return; }
+      const w = session[sessionIdx];
+      const input = document.getElementById('writing-input');
+      if (!input) return;
+      const answer = input.value.trim();
+      const correct = answer.toLowerCase() === w.word.toLowerCase();
+      writingAttempts++;
+
+      if (correct) {
+        writingRevealed = true;
+        // Attempt 1 = full Know; attempt 2 or 3 = partial Know (no easeFactor bonus)
+        applyWritingSM2(w.word, true, writingAttempts === 1);
+        renderWritingReveal(w, true);
+      } else if (writingAttempts >= 3) {
+        writingRevealed = true;
+        applyWritingSM2(w.word, false, false);
+        renderWritingReveal(w, false);
+      } else {
+        renderWritingCard(w, '❌ Wrong, try again!', '#ef4444');
+      }
+    }
+
+    function applyWritingSM2(wordStr, known, fullCredit) {
+      const orig = words.find(x => x.word === wordStr);
+      if (!orig) return;
+      if (known) {
+        correctAnswersInSession++;
+        orig.interval = orig.interval < 1 ? 1 : orig.interval < 2 ? 2 : Math.round(orig.interval * orig.easeFactor);
+        if (fullCredit) orig.easeFactor = Math.max(1.3, orig.easeFactor + 0.1);
+        if (correctAnswersInSession > 0 && correctAnswersInSession % 10 === 0) showGoodJob();
+      } else {
+        orig.interval = 1;
+        orig.easeFactor = Math.max(1.3, orig.easeFactor - 0.2);
+      }
+      orig.nextReview = daysFromNow(orig.interval);
+      orig.known = orig.interval >= 21;
+      save();
+    }
+
+    function advanceWriting() {
+      sessionIdx++;
+      showCard();
     }
 
     function flipCard() {
+      if (reviewMode === 'writing') return;
       if (sessionIdx >= session.length || !session.length) return;
       if (flipped) return;
       flipped = true;
       const w = session[sessionIdx];
       document.getElementById('card-content').innerHTML =
         `<div><div class="word">${w.word}</div>${speakBtn(w.word)}<div class="definition">${w.def}</div></div>`;
+      document.getElementById('card-actions').style.visibility = 'visible';
     }
 
     document.addEventListener('keydown', e => {
       if (!document.getElementById('view-review').classList.contains('active')) return;
+      if (reviewMode === 'writing') return;
       if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); flipCard(); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); markCard(false); }
       if (e.key === 'ArrowRight') { e.preventDefault(); markCard(true); }
@@ -582,6 +699,7 @@
     }
 
     function markCard(known) {
+      if (reviewMode === 'writing') return;
       const w = session[sessionIdx];
       const orig = words.find(x => x.word === w.word);
       if (orig) {
@@ -589,11 +707,7 @@
           correctAnswersInSession++;
           orig.interval = orig.interval < 1 ? 1 : orig.interval < 2 ? 2 : Math.round(orig.interval * orig.easeFactor);
           orig.easeFactor = Math.max(1.3, orig.easeFactor + 0.1);
-          
-          // Show good job message every 10 correct answers
-          if (correctAnswersInSession > 0 && correctAnswersInSession % 10 === 0) {
-            showGoodJob();
-          }
+          if (correctAnswersInSession > 0 && correctAnswersInSession % 10 === 0) showGoodJob();
         } else {
           orig.interval = 1;
           orig.easeFactor = Math.max(1.3, orig.easeFactor - 0.2);

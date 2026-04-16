@@ -114,30 +114,37 @@ The app has four screens. Only one is visible at a time. The default screen on l
 - Skip duplicates silently (case-insensitive).
 - After import: display a summary of how many words were added and how many were skipped. Reset the file input.
 
-### 3. Review (Flashcard Session)
+### 3. Review (Flashcard / Writing Session)
 
 #### Starting a session
 - Default mode: only include cards where `nextReview <= today` (due cards).
 - "Review All" mode: include all cards regardless of due date.
 - Shuffle the pool randomly at the start of each session.
+- A **mode toggle** (Flashcard / Writing) is shown on the Review screen. The selected mode applies to the current session.
 
-#### Showing a card
+#### Flashcard mode
 - Display the word and a "tap to reveal" prompt.
 - Show a 🔊 button next to the word that speaks the word aloud using the browser's Web Speech API (`speechSynthesis`, language `en-US`).
 - Show a progress counter: current position out of total cards in session.
 - If the word collection is empty: show an empty-state message.
 - If the session is complete: show a completion message and the next upcoming review date.
+- Flipping: triggered by tapping/clicking the card, or via keyboard shortcut. Reveals the definition. A card can only be flipped once (no toggling back).
+- Rating: two options "Know" or "Don't Know". Applies full SM-2 algorithm. Persists and advances to next card.
 
-#### Flipping a card
-- Triggered by tapping/clicking the card, or via keyboard shortcut.
-- Reveals the definition beneath the word.
-- A card can only be flipped once per display (no toggling back).
-
-#### Rating a card
-- Two options: "Know" or "Don't Know".
-- Apply the SM-2 algorithm to the word's persistent record (matched by word string).
-- Persist the updated record, then advance to the next card.
-- Every 10 correct ("Know") answers within a session, a rain animation triggers: 15 items fall down the screen from random positions. Each item is randomly either a car brand logo (Tesla, BMW, Mercedes-Benz, Audi, Porsche, Ferrari, Lamborghini, Toyota, Honda, Ford) or a silly face emoji (🤪😜🤴😝🤡👻🙃😵🤣😂🥳😎🤓👽🫠). Items vary in size, fall speed, and start delay, then auto-remove after their animation completes. The counter resets when a new session starts.
+#### Writing mode
+- The word is hidden. Only a 🔊 button and a text input are shown.
+- The word is automatically spoken when the card is first displayed.
+- The user types their answer and submits (button or Enter key).
+- Up to **3 attempts** are allowed per card. Remaining attempts are shown as filled/empty dots (e.g. `● ● ○`).
+- **Hints**: after the 1st wrong attempt, reveal the first letter (e.g. `a _ _ _ _`). After the 2nd wrong attempt, reveal one additional letter.
+- Answer matching is case-insensitive and trims whitespace.
+- **On correct answer**: reveal the word (green) and definition, auto-apply SM-2 rating, show "Next →".
+  - Correct on attempt 1: full "Know" — apply interval increase and `easeFactor += 0.1`.
+  - Correct on attempt 2 or 3: partial "Know" — apply interval increase only, no `easeFactor` change.
+- **On 3rd wrong answer**: reveal the word (red) and definition, auto-apply "Don't Know" SM-2 rating, show "Next →".
+- Every 10 correct answers (any attempt) within a session triggers the rain animation.
+- Keyboard shortcuts do not apply in writing mode (input field captures keystrokes).
+- If the word collection is empty or session is complete: same messages as flashcard mode.
 
 ### 4. Word List
 - Sorted by `nextReview` ascending (most overdue first).
@@ -191,13 +198,15 @@ The app has four screens. Only one is visible at a time. The default screen on l
 
 ---
 
-## Keyboard Shortcuts (Review screen only)
+## Keyboard Shortcuts (Review screen — Flashcard mode only)
 
 | Key(s)                        | Action              |
 |-------------------------------|---------------------|
 | Space, Arrow Up, Arrow Down   | Flip card           |
 | Arrow Right                   | Mark as "Know"      |
 | Arrow Left                    | Mark as "Don't Know"|
+
+In Writing mode, the text input captures keystrokes. Enter submits the answer or advances to the next card after reveal.
 
 ---
 
