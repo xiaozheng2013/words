@@ -168,23 +168,32 @@ window.advanceWriting = function () {
 window.flipCard = function () {
   if (reviewMode === 'writing') return;
   if (sessionIdx >= session.length || !session.length) return;
-  if (flipped) return;
-  flipped = true;
   var w = session[sessionIdx];
-  var escapedDef = (w.def || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  document.getElementById('card-content').innerHTML =
-    '<div><div class="word">' + w.word + '</div>' + speakBtn(w.word) +
-    '<div class="definition" id="review-def-display">' + (w.def || '') + '</div>' +
-    '<button id="review-edit-def-btn" onclick="event.stopPropagation();startReviewDefEdit()" style="margin-top:0.5rem;padding:0.25rem 0.6rem;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:5px;font-size:0.8rem;cursor:pointer">✏️ Edit definition</button>' +
-    '<div id="review-def-edit" style="display:none;margin-top:0.5rem;width:100%">' +
-      '<textarea id="review-def-input" style="width:100%;min-height:60px;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;resize:vertical" onclick="event.stopPropagation()">' + escapedDef + '</textarea>' +
-      '<div style="display:flex;gap:0.4rem;margin-top:0.4rem">' +
-        '<button onclick="event.stopPropagation();saveReviewDef()" style="padding:0.3rem 0.8rem;background:#22c55e;color:white;border:none;border-radius:5px;font-size:0.85rem;cursor:pointer">Save</button>' +
-        '<button onclick="event.stopPropagation();cancelReviewDefEdit()" style="padding:0.3rem 0.8rem;background:#e2e8f0;color:#475569;border:none;border-radius:5px;font-size:0.85rem;cursor:pointer">Cancel</button>' +
+
+  if (!flipped) {
+    // Flip to definition side
+    flipped = true;
+    var escapedDef = (w.def || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    document.getElementById('card-content').innerHTML =
+      '<div><div class="word">' + w.word + '</div>' + speakBtn(w.word) +
+      '<div class="definition" id="review-def-display">' + (w.def || '') + '</div>' +
+      '<button id="review-edit-def-btn" onclick="event.stopPropagation();startReviewDefEdit()" style="margin-top:0.5rem;padding:0.25rem 0.6rem;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:5px;font-size:0.8rem;cursor:pointer">✏️ Edit definition</button>' +
+      '<div id="review-def-edit" style="display:none;margin-top:0.5rem;width:100%">' +
+        '<textarea id="review-def-input" style="width:100%;min-height:60px;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;resize:vertical" onclick="event.stopPropagation()">' + escapedDef + '</textarea>' +
+        '<div style="display:flex;gap:0.4rem;margin-top:0.4rem">' +
+          '<button onclick="event.stopPropagation();saveReviewDef()" style="padding:0.3rem 0.8rem;background:#22c55e;color:white;border:none;border-radius:5px;font-size:0.85rem;cursor:pointer">Save</button>' +
+          '<button onclick="event.stopPropagation();cancelReviewDefEdit()" style="padding:0.3rem 0.8rem;background:#e2e8f0;color:#475569;border:none;border-radius:5px;font-size:0.85rem;cursor:pointer">Cancel</button>' +
+        '</div>' +
       '</div>' +
-    '</div>' +
-    '</div>';
-  document.getElementById('card-actions').style.visibility = 'visible';
+      '</div>';
+    document.getElementById('card-actions').style.visibility = 'visible';
+  } else {
+    // Flip back to word side
+    flipped = false;
+    document.getElementById('card-content').innerHTML =
+      '<div><div class="word">' + w.word + '</div>' + speakBtn(w.word) + '<div class="hint">tap to reveal</div></div>';
+    document.getElementById('card-actions').style.visibility = 'hidden';
+  }
 };
 
 window.startReviewDefEdit = function () {
@@ -222,6 +231,6 @@ document.addEventListener('keydown', function (e) {
   if (!document.getElementById('view-review').classList.contains('active')) return;
   if (reviewMode === 'writing') return;
   if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); flipCard(); }
-  if (e.key === 'ArrowLeft') { e.preventDefault(); markCard(false); }
-  if (e.key === 'ArrowRight') { e.preventDefault(); markCard(true); }
+  if (flipped && e.key === 'ArrowLeft') { e.preventDefault(); markCard(false); }
+  if (flipped && e.key === 'ArrowRight') { e.preventDefault(); markCard(true); }
 });
