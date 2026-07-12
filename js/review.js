@@ -68,7 +68,7 @@ window.showCard = function () {
   } else {
     flipped = false;
     actions.style.display = 'flex';
-    actions.style.visibility = 'hidden';
+    actions.style.visibility = 'visible';
     card.onclick = flipCard;
     content.innerHTML = '<div><div class="word">' + w.word + '</div>' + speakBtn(w.word) + '<div class="hint">tap to reveal</div></div>';
   }
@@ -192,7 +192,6 @@ window.flipCard = function () {
     flipped = false;
     document.getElementById('card-content').innerHTML =
       '<div><div class="word">' + w.word + '</div>' + speakBtn(w.word) + '<div class="hint">tap to reveal</div></div>';
-    document.getElementById('card-actions').style.visibility = 'hidden';
   }
 };
 
@@ -231,6 +230,6 @@ document.addEventListener('keydown', function (e) {
   if (!document.getElementById('view-review').classList.contains('active')) return;
   if (reviewMode === 'writing') return;
   if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); flipCard(); }
-  if (flipped && e.key === 'ArrowLeft') { e.preventDefault(); markCard(false); }
-  if (flipped && e.key === 'ArrowRight') { e.preventDefault(); markCard(true); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); markCard(false); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); markCard(true); }
 });
