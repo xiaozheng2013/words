@@ -98,13 +98,44 @@ window.renderWritingCard = function (w, feedback, feedbackColor) {
 window.renderWritingReveal = function (w, correct) {
   var color = correct ? '#16a34a' : '#ef4444';
   var icon = correct ? '✅' : '❌';
+  var escapedDef = (w.def || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   document.getElementById('card-content').innerHTML =
     '<div style="width:100%">' +
       '<div style="font-size:1.6rem;font-weight:700;color:' + color + ';margin-bottom:0.3rem">' + icon + ' ' + w.word + '</div>' +
       speakBtn(w.word) +
-      '<div style="color:#475569;margin-top:0.5rem;font-size:1rem">' + (w.def || '') + '</div>' +
+      '<div id="writing-def-display" style="color:#475569;margin-top:0.5rem;font-size:1rem">' + (w.def || '') + '</div>' +
+      '<button id="writing-edit-def-btn" onclick="startWritingDefEdit()" style="margin-top:0.4rem;padding:0.25rem 0.6rem;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:5px;font-size:0.8rem;cursor:pointer">✏️ Edit definition</button>' +
+      '<div id="writing-def-edit" style="display:none;margin-top:0.5rem;width:100%">' +
+        '<textarea id="writing-def-input" style="width:100%;min-height:60px;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;resize:vertical">' + escapedDef + '</textarea>' +
+        '<div style="display:flex;gap:0.4rem;margin-top:0.4rem">' +
+          '<button onclick="saveWritingDef()" style="padding:0.3rem 0.8rem;background:#22c55e;color:white;border:none;border-radius:5px;font-size:0.85rem;cursor:pointer">Save</button>' +
+          '<button onclick="cancelWritingDefEdit()" style="padding:0.3rem 0.8rem;background:#e2e8f0;color:#475569;border:none;border-radius:5px;font-size:0.85rem;cursor:pointer">Cancel</button>' +
+        '</div>' +
+      '</div>' +
       '<button onclick="advanceWriting()" style="margin-top:1rem;padding:0.5rem 1.2rem;background:#3b82f6;color:white;border:none;border-radius:6px;font-size:1rem;cursor:pointer">Next →</button>' +
     '</div>';
+};
+
+window.startWritingDefEdit = function () {
+  document.getElementById('writing-def-display').style.display = 'none';
+  document.getElementById('writing-edit-def-btn').style.display = 'none';
+  document.getElementById('writing-def-edit').style.display = 'block';
+  document.getElementById('writing-def-input').focus();
+};
+
+window.cancelWritingDefEdit = function () {
+  document.getElementById('writing-def-display').style.display = '';
+  document.getElementById('writing-edit-def-btn').style.display = '';
+  document.getElementById('writing-def-edit').style.display = 'none';
+};
+
+window.saveWritingDef = function () {
+  var w = session[sessionIdx];
+  var newDef = document.getElementById('writing-def-input').value.trim();
+  w.def = newDef;
+  save();
+  document.getElementById('writing-def-display').textContent = newDef;
+  cancelWritingDefEdit();
 };
 
 window.submitWriting = function () {
@@ -140,9 +171,42 @@ window.flipCard = function () {
   if (flipped) return;
   flipped = true;
   var w = session[sessionIdx];
+  var escapedDef = (w.def || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   document.getElementById('card-content').innerHTML =
-    '<div><div class="word">' + w.word + '</div>' + speakBtn(w.word) + '<div class="definition">' + w.def + '</div></div>';
+    '<div><div class="word">' + w.word + '</div>' + speakBtn(w.word) +
+    '<div class="definition" id="review-def-display">' + (w.def || '') + '</div>' +
+    '<button id="review-edit-def-btn" onclick="event.stopPropagation();startReviewDefEdit()" style="margin-top:0.5rem;padding:0.25rem 0.6rem;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:5px;font-size:0.8rem;cursor:pointer">✏️ Edit definition</button>' +
+    '<div id="review-def-edit" style="display:none;margin-top:0.5rem;width:100%">' +
+      '<textarea id="review-def-input" style="width:100%;min-height:60px;padding:0.5rem;border:1px solid #cbd5e1;border-radius:6px;font-size:0.9rem;resize:vertical" onclick="event.stopPropagation()">' + escapedDef + '</textarea>' +
+      '<div style="display:flex;gap:0.4rem;margin-top:0.4rem">' +
+        '<button onclick="event.stopPropagation();saveReviewDef()" style="padding:0.3rem 0.8rem;background:#22c55e;color:white;border:none;border-radius:5px;font-size:0.85rem;cursor:pointer">Save</button>' +
+        '<button onclick="event.stopPropagation();cancelReviewDefEdit()" style="padding:0.3rem 0.8rem;background:#e2e8f0;color:#475569;border:none;border-radius:5px;font-size:0.85rem;cursor:pointer">Cancel</button>' +
+      '</div>' +
+    '</div>' +
+    '</div>';
   document.getElementById('card-actions').style.visibility = 'visible';
+};
+
+window.startReviewDefEdit = function () {
+  document.getElementById('review-def-display').style.display = 'none';
+  document.getElementById('review-edit-def-btn').style.display = 'none';
+  document.getElementById('review-def-edit').style.display = 'block';
+  document.getElementById('review-def-input').focus();
+};
+
+window.cancelReviewDefEdit = function () {
+  document.getElementById('review-def-display').style.display = '';
+  document.getElementById('review-edit-def-btn').style.display = '';
+  document.getElementById('review-def-edit').style.display = 'none';
+};
+
+window.saveReviewDef = function () {
+  var w = session[sessionIdx];
+  var newDef = document.getElementById('review-def-input').value.trim();
+  w.def = newDef;
+  save();
+  document.getElementById('review-def-display').textContent = newDef;
+  cancelReviewDefEdit();
 };
 
 window.markCard = function (known) {
