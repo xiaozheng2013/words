@@ -1,5 +1,17 @@
 # Release Notes
 
+## v1.4.0 — Review Enhancements
+
+### Summary
+Improves the flashcard review experience with inline definition editing, card flip toggling, and always-visible rating controls.
+
+### New Features
+- **Edit definition in Review** — while reviewing in either Flashcard or Writing mode, tap "✏️ Edit definition" to modify a word's definition inline. Changes save immediately.
+- **Card flip toggle** — clicking/tapping a flashcard now toggles between the word side and the definition side (previously it could only flip once).
+- **Know/Don't Know always visible** — the rating buttons and keyboard shortcuts now work on both the word side and the definition side, so you can rate without flipping first.
+
+---
+
 ## v1.3.0 — Merriam-Webster API Integration
 
 ### Summary

@@ -17,15 +17,23 @@
 - Tap a card to reveal the definition, then rate yourself:
   - **Know** → longer interval before next review
   - **Don't Know** → card comes back sooner
+- You can mark **Know** or **Don't Know** on either side of the card — no need to flip first.
+- Tap the card again to flip back to the word side.
 - Use **Review All** to practice everything, not just due cards.
+
+### Editing Definitions During Review
+
+- After flipping to the definition side, tap **✏️ Edit definition** to update the definition inline.
+- In Writing mode, the edit button appears on the reveal screen after answering.
+- Changes are saved immediately to your word list.
 
 ### Keyboard Shortcuts (Review screen)
 
 | Key | Action |
 |-----|--------|
-| Space / ↑ / ↓ | Flip card |
-| → | Know |
-| ← | Don't Know |
+| Space / ↑ / ↓ | Flip card (toggles between word and definition) |
+| → | Know (works on both sides) |
+| ← | Don't Know (works on both sides) |
 
 ## Tracking Progress
 

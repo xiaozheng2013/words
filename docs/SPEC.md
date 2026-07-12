@@ -128,8 +128,9 @@ The app has four screens. Only one is visible at a time. The default screen on l
 - Show a progress counter: current position out of total cards in session.
 - If the word collection is empty: show an empty-state message.
 - If the session is complete: show a completion message and the next upcoming review date.
-- Flipping: triggered by tapping/clicking the card, or via keyboard shortcut. Reveals the definition. A card can only be flipped once (no toggling back).
-- Rating: two options "Know" or "Don't Know". Applies full SM-2 algorithm. Persists and advances to next card.
+- Flipping: triggered by tapping/clicking the card, or via keyboard shortcut. Reveals the definition. Clicking/tapping again flips back to the word side (toggle behavior).
+- Rating: two options "Know" or "Don't Know", visible on both the word side and the definition side. Applies full SM-2 algorithm. Persists and advances to next card.
+- **Edit definition**: when the card is on the definition side, an "✏️ Edit definition" button is shown. Tapping it opens an inline textarea to modify the definition. Changes are saved immediately.
 
 #### Writing mode
 - The word is hidden. Only a 🔊 button and a text input are shown.
@@ -142,6 +143,7 @@ The app has four screens. Only one is visible at a time. The default screen on l
   - Correct on attempt 1: full "Know" — apply interval increase and `easeFactor += 0.1`.
   - Correct on attempt 2 or 3: partial "Know" — apply interval increase only, no `easeFactor` change.
 - **On 3rd wrong answer**: reveal the word (red) and definition, auto-apply "Don't Know" SM-2 rating, show "Next →".
+- **Edit definition**: on the reveal screen (after correct or incorrect answer), an "✏️ Edit definition" button allows inline editing of the definition. Changes are saved immediately.
 - Every 10 correct answers (any attempt) within a session triggers the rain animation.
 - Keyboard shortcuts do not apply in writing mode (input field captures keystrokes).
 - If the word collection is empty or session is complete: same messages as flashcard mode.
@@ -202,9 +204,9 @@ The app has four screens. Only one is visible at a time. The default screen on l
 
 | Key(s)                        | Action              |
 |-------------------------------|---------------------|
-| Space, Arrow Up, Arrow Down   | Flip card           |
-| Arrow Right                   | Mark as "Know"      |
-| Arrow Left                    | Mark as "Don't Know"|
+| Space, Arrow Up, Arrow Down   | Flip card (toggle)  |
+| Arrow Right                   | Mark as "Know" (works on both sides) |
+| Arrow Left                    | Mark as "Don't Know" (works on both sides) |
 
 In Writing mode, the text input captures keystrokes. Enter submits the answer or advances to the next card after reveal.
 
