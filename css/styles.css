@@ -1,0 +1,76 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: sans-serif; background: #f0f4f8; color: #333; display: flex; flex-direction: column; align-items: center; padding: 2rem; min-height: 100vh; }
+h1 { margin-bottom: 1.5rem; font-size: 1.8rem; }
+
+nav { display: flex; gap: 1rem; margin-bottom: 2rem; }
+nav button { padding: 0.5rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; background: #cbd5e1; font-size: 1rem; }
+nav button.active { background: #3b82f6; color: white; }
+
+.view { display: none; width: 100%; max-width: 520px; }
+.view.active { display: block; }
+
+/* Add Word */
+.add-form { display: flex; flex-direction: column; gap: 0.8rem; }
+.add-form input, .add-form textarea { padding: 0.6rem 0.8rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; width: 100%; }
+.add-form textarea { resize: vertical; min-height: 80px; }
+.add-form button { padding: 0.6rem; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+.add-form button:hover { background: #2563eb; }
+#add-msg { color: green; font-size: 0.9rem; min-height: 1.2rem; }
+.file-upload { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 0.8rem; text-align: center; cursor: pointer; color: #64748b; font-size: 0.9rem; transition: border-color 0.2s; }
+.file-upload:hover { border-color: #3b82f6; color: #3b82f6; }
+.divider { text-align: center; color: #94a3b8; font-size: 0.85rem; position: relative; }
+.divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 44%; height: 1px; background: #e2e8f0; }
+.divider::before { left: 0; } .divider::after { right: 0; }
+
+/* Word List */
+#word-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+.word-item { background: white; border-radius: 8px; padding: 0.7rem 1rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.word-item span { font-weight: 600; }
+.word-item small { color: #64748b; font-size: 0.8rem; }
+.word-item button { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1rem; }
+
+/* Flashcard */
+#card-area { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+#progress-text { color: #64748b; font-size: 0.9rem; }
+.card { width: 100%; min-height: 180px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 2rem; text-align: center; user-select: none; transition: background 0.2s; }
+.card:hover { background: #f8fafc; }
+.card .word { font-size: 1.8rem; font-weight: 700; }
+.card .definition { font-size: 1.1rem; color: #475569; }
+.card .hint { font-size: 0.85rem; color: #94a3b8; margin-top: 0.5rem; }
+.card-actions { display: flex; gap: 1rem; width: 100%; justify-content: space-between; }
+.card-actions button { padding: 0.7rem 1.5rem; border: none; border-radius: 8px; font-size: 1.4rem; cursor: pointer; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.card-actions button small { font-size: 0.7rem; font-weight: 400; }
+#btn-dontknow { background: #fee2e2; color: #ef4444; }
+#btn-dontknow:hover { background: #fecaca; }
+#btn-know { background: #dcfce7; color: #16a34a; }
+#btn-know:hover { background: #bbf7d0; }
+#card-actions-row { display: flex; gap: 0.8rem; width: 100%; justify-content: center; }
+#card-actions-row button { padding: 0.4rem 1rem; border: 1px solid #cbd5e1; background: white; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+#no-cards-msg { color: #64748b; text-align: center; margin-top: 2rem; }
+
+/* Stats */
+#stats-area { display: flex; flex-direction: column; gap: 1rem; }
+.stat-box { background: white; border-radius: 10px; padding: 1rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.stat-box h3 { font-size: 1rem; color: #64748b; margin-bottom: 0.3rem; }
+.stat-box p { font-size: 2rem; font-weight: 700; }
+.stat-row { display: flex; gap: 1rem; }
+.stat-row .stat-box { flex: 1; }
+.progress-bar-wrap { background: #e2e8f0; border-radius: 99px; height: 12px; overflow: hidden; margin-top: 0.5rem; }
+.progress-bar { height: 100%; background: #3b82f6; border-radius: 99px; transition: width 0.4s; }
+#reset-btn { margin-top: 1rem; padding: 0.5rem 1rem; background: #fee2e2; color: #ef4444; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+#reset-btn:hover { background: #fecaca; }
+
+/* Good Job Word Rain */
+.rain-word {
+  position: fixed;
+  top: -60px;
+  z-index: 1000;
+  font-weight: bold;
+  pointer-events: none;
+  animation: rainFall linear forwards;
+}
+@keyframes rainFall {
+  0% { top: -60px; opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 105vh; opacity: 0; }
+}
